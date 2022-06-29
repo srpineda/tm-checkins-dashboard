@@ -1,4 +1,4 @@
-import pandas as pd  # pip install pandas openpyxl
+import pandas as pd  # pip install pandas
 import plotly.express as px  # pip install plotly-express
 import streamlit as st  # pip install streamlit
 import requests
@@ -136,13 +136,3 @@ fig_user_checkins.update_layout(
 st.plotly_chart(fig_user_hours, use_container_width=True)
 st.plotly_chart(fig_user_checkins, use_container_width=True)
 st.dataframe(df_selection)
-
-# # ---- HIDE STREAMLIT STYLE ----
-# hide_st_style = """
-#             <style>
-#             #MainMenu {visibility: hidden;}
-#             footer {visibility: hidden;}
-#             header {visibility: hidden;}
-#             </style>
-#             """
-# st.markdown(hide_st_style, unsafe_allow_html=True)
