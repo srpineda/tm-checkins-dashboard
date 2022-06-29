@@ -136,3 +136,13 @@ fig_user_checkins.update_layout(
 st.plotly_chart(fig_user_hours, use_container_width=True)
 st.plotly_chart(fig_user_checkins, use_container_width=True)
 st.dataframe(df_selection)
+
+# ---- HIDE STREAMLIT STYLE ----
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
