@@ -61,26 +61,36 @@ else:
         default = [9]
     )
 
-fields = [f"user_id={','.join(str(x) for x in user)}" if not all_users else "",
-          f"manager_id={','.join(str(x) for x in manager)}" if not all_managers else "",
-          f"month={','.join(str(x) for x in month)}" if not all_months else ""]
+if user == [] or manager == [] or month == []:
+    df_selection = pd.DataFrame()
 
-field_params = '&'.join(filter(None, fields))
-response = requests.get(f"https://tm-exam-354703.uc.r.appspot.com/?{field_params}")
+else:
+    fields = [f"user_id={','.join(str(x) for x in user)}" if not all_users else "",
+            f"manager_id={','.join(str(x) for x in manager)}" if not all_managers else "",
+            f"month={','.join(str(x) for x in month)}" if not all_months else ""]
 
-df_selection = pd.read_json(response.text)
-df_selection['month'] = df_selection.date.dt.month
+    field_params = '&'.join(filter(None, fields))
+    response = requests.get(f"https://tm-exam-354703.uc.r.appspot.com/?{field_params}")
+
+    df_selection = pd.read_json(response.text)
+
+if not df_selection.empty:
+    df_selection['month'] = df_selection.date.dt.month
 
 # ---- MAINPAGE ----
 st.title(":bar_chart: 2019 Check-ins Dashboard")
 st.markdown("##")
 
 # TOP KPI's
-total_managers = len(manager)
-total_users = len(user)
-total_months = len(month)
-total_hours = int(df_selection['hours'].sum())
-total_projects = len(df_selection['project_id'].unique())
+if df_selection.empty:
+    total_managers = total_users = total_months = total_hours = total_projects = 0
+
+else:
+    total_managers = len(df_selection['manager_id'].unique())
+    total_users = len(df_selection['user_id'].unique())
+    total_months = len(df_selection['month'].unique())
+    total_hours = int(df_selection['hours'].sum())
+    total_projects = len(df_selection['project_id'].unique())
 
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
@@ -101,40 +111,42 @@ with col5:
 
 st.markdown("""---""")
 
-# Total hours per user [BAR CHART]
-total_hours_per_user = df_selection.groupby(by=["user_id"]).sum()[["hours"]]
-fig_user_hours = px.bar(
-    total_hours_per_user,
-    x=total_hours_per_user.index,
-    y="hours",
-    title="<b>Total hours per user</b>",
-    color_discrete_sequence=["#0083B8"] * len(total_hours_per_user),
-    template="plotly_white"
-)
-fig_user_hours.update_layout(
-    xaxis=dict(tickmode="array", tickvals=total_hours_per_user.index),
-    plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=(dict(showgrid=False))
-)
+if not df_selection.empty:
+    # Total hours per user [BAR CHART]
+    total_hours_per_user = df_selection.groupby(by=["user_id"]).sum()[["hours"]]
+    fig_user_hours = px.bar(
+        total_hours_per_user,
+        x=total_hours_per_user.index,
+        y="hours",
+        title="<b>Total hours per user</b>",
+        color_discrete_sequence=["#0083B8"] * len(total_hours_per_user),
+        template="plotly_white"
+    )
+    fig_user_hours.update_layout(
+        xaxis=dict(tickmode="array", tickvals=total_hours_per_user.index),
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=(dict(showgrid=False))
+    )
 
-# Total checkins per user [BAR CHART]
-total_checkins_per_user = df_selection.groupby(by=["user_id"]).size()
-fig_user_checkins = px.bar(
-    total_checkins_per_user,
-    x=total_checkins_per_user.index,
-    y=total_checkins_per_user.values,
-    title="<b>Total checkins per user</b>",
-    color_discrete_sequence=["#0083B8"] * len(total_checkins_per_user),
-    template="plotly_white"
-)
-fig_user_checkins.update_layout(
-    xaxis=dict(tickmode="array", tickvals=total_checkins_per_user.index),
-    plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=(dict(showgrid=False)),
-)
+    # Total checkins per user [BAR CHART]
+    total_checkins_per_user = df_selection.groupby(by=["user_id"]).size()
+    fig_user_checkins = px.bar(
+        total_checkins_per_user,
+        x=total_checkins_per_user.index,
+        y=total_checkins_per_user.values,
+        title="<b>Total checkins per user</b>",
+        color_discrete_sequence=["#0083B8"] * len(total_checkins_per_user),
+        template="plotly_white"
+    )
+    fig_user_checkins.update_layout(
+        xaxis=dict(tickmode="array", tickvals=total_checkins_per_user.index),
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=(dict(showgrid=False)),
+    )
 
-st.plotly_chart(fig_user_hours, use_container_width=True)
-st.plotly_chart(fig_user_checkins, use_container_width=True)
+    st.plotly_chart(fig_user_hours, use_container_width=True)
+    st.plotly_chart(fig_user_checkins, use_container_width=True)
+
 st.dataframe(df_selection)
 
 # ---- HIDE STREAMLIT STYLE ----
